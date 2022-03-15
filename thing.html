@@ -1,0 +1,99 @@
+<body style="padding:0;margin:0;" >
+
+
+<canvas id="screen"
+width="800" height="600" style="border:0;margin:0;" ></canvas>
+<canvas id="game"
+width="200" height="150" style="display:none;" ></canvas>
+<img src="mortin.jpg" id="bug" style="display:none;"></img>
+
+
+<script>
+//var screen = document.getElementById("screen")
+var defaultColor = "#000000"
+var bgColor = "#FFFFFF"
+
+var gameCanvas = document.getElementById("game")
+var gameSize = [200, 150]
+gameCanvas.width = gameSize[0]
+gameCanvas.height = gameSize[1]
+var gameDraw = gameCanvas.getContext("2d")
+gameDraw.imageSmoothingEnabled = false
+// resize main canvas to iframe/window size
+var screenCanvas = document.getElementById("screen")
+var screenSize = [window.innerWidth, window.innerHeight]
+screenCanvas.width = screenSize[0]
+screenCanvas.height = screenSize[1]
+// get main context; drawn from game canvas
+var screenDraw = screenCanvas.getContext("2d")
+screenDraw.imageSmoothingEnabled = false
+
+function thing(){ // use images in here
+  // make :b:artin
+  var Bartin = document.getElementById("bug")
+  // testing: calibration
+  gameDraw.fillStyle = "#0000FF"
+  gameDraw.fillRect(0, 0, 100, 100)
+  gameDraw.drawImage(Bartin, 100, 0, 100, 100)
+  
+  screenDraw.fillStyle = "#FF0000"
+  screenDraw.fillRect(0, 0, 1, 1);
+  screenDraw.fillRect(0, screenSize[1]-1, 1, 1);
+  screenDraw.fillRect(screenSize[0]-1, 0, 1, 1);
+  screenDraw.fillRect(screenSize[0]-1, screenSize[1]-1, 1, 1);
+  screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+  
+  screenDraw.fillStyle = defaultColor
+  screen.fillStyle = defaultColor
+}
+function addImage(imageLocation, imageName){
+  // create and return reference to new image element
+  // location is used as source of image
+  // name will become ID of image element
+  var ret = document.createElement("img");
+  ret.src = imageLocation;
+  ret.id = imageName; // maybe add image prefix
+  ret.style = "display:none;";
+  document.body.appendChild(ret); // should not display; test if this is necessary; maybe set to game home rather than document
+  return ret; // todo: test that this loads correctly
+}
+function handleClick(e){
+  // assess game coordinates of window coordinates
+  var xx = Math.trunc(e.clientX * gameSize[0] / screenSize[0])
+  var yy = Math.trunc(e.clientY * gameSize[1] / screenSize[1])
+  gameClick(xx, yy)
+}
+function gameClick(x, y) {
+  // handle a click within the game
+  // this code draws a line on the canvas
+  gameDraw.beginPath();
+  gameDraw.moveTo(0, 0);
+  gameDraw.lineTo(x, y);
+  gameDraw.stroke();
+  // update to display the change (call here or set flag)
+  screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+
+}
+function handleKey(e){
+  console.log(e.keyCode);
+  if (e.keyCode == 65) {
+    // clear the canvas
+    gameDraw.fillStyle = bgColor
+    gameDraw.fillRect(0,0, 200, 150)
+    gameDraw.fillStyle = defaultColor
+  }
+  else {
+    // draw something
+    gameDraw.beginPath();
+    gameDraw.moveTo(0, 0);
+    gameDraw.lineTo(e.keyCode % 200, 100);
+    gameDraw.stroke();
+  }
+  // this will be moved to a tick function vv
+  screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+}
+window.addEventListener("click", handleClick)
+window.addEventListener("keydown", handleKey)
+window.addEventListener("load", thing)
+</script>
+</body>
