@@ -2,9 +2,9 @@
 
 
 <canvas id="screen"
-width="800" height="600" style="border:0;margin:0;" ></canvas>
+width="800" height="800" style="border:0;margin:0;" ></canvas>
 <canvas id="game"
-width="200" height="150" style="display:none;" ></canvas>
+width="200" height="200" style="display:none;" ></canvas>
 <img src="mortin.jpg" id="bug" style="display:none;"></img>
 
 
@@ -13,8 +13,9 @@ width="200" height="150" style="display:none;" ></canvas>
 var defaultColor = "#000000"
 var bgColor = "#FFFFFF"
 
+// initialize window
 var gameCanvas = document.getElementById("game")
-var gameSize = [200, 150]
+var gameSize = [200, 200]
 gameCanvas.width = gameSize[0]
 gameCanvas.height = gameSize[1]
 var gameDraw = gameCanvas.getContext("2d")
@@ -28,7 +29,52 @@ screenCanvas.height = screenSize[1]
 var screenDraw = screenCanvas.getContext("2d")
 screenDraw.imageSmoothingEnabled = false
 
-function thing(){ // use images in here
+eventContext = {
+  gameClick : function (x, y) {
+    // handle a click within the game
+    // this code draws a line on the canvas
+    gameDraw.beginPath();
+    gameDraw.moveTo(0, 0);
+    gameDraw.lineTo(x, y);
+    gameDraw.stroke();
+    // update to display the change (call here or set flag)
+    screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1]);
+  },
+  gameMousemove : function (x, y) {
+    // handle a click within the game
+    // this code draws a line on the canvas
+    gameDraw.strokeStyle = "Red";
+    gameDraw.beginPath();
+    gameDraw.moveTo(MouseoverCoords[0], MouseoverCoords[1]);
+    gameDraw.lineTo(x, y);
+    gameDraw.stroke();
+    gameDraw.strokeStyle = defaultColor;
+    MouseoverCoords = [x, y];
+    // update to display the change (call here or set flag)
+    screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+  },
+  gameKeydown : function (key) {
+    console.log(key);
+    if (key == 65) {
+      // clear the canvas
+      gameDraw.fillStyle = bgColor
+      gameDraw.fillRect(0,0, 200, 150)
+      gameDraw.fillStyle = defaultColor
+    }
+    else {
+      // draw something
+      gameDraw.beginPath();
+      gameDraw.moveTo(0, 0);
+      gameDraw.lineTo(e.keyCode % 200, 100);
+      gameDraw.stroke();
+    }
+    // this will be moved to a tick function vv
+    screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+  }, 
+  
+};
+
+function initGame(){ // use images in here
   // make :b:artin
   var Bartin = document.getElementById("bug")
   // testing: calibration
@@ -44,7 +90,6 @@ function thing(){ // use images in here
   screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
   
   screenDraw.fillStyle = defaultColor
-  screen.fillStyle = defaultColor
 }
 function addImage(imageLocation, imageName){
   // create and return reference to new image element
@@ -59,41 +104,33 @@ function addImage(imageLocation, imageName){
 }
 function handleClick(e){
   // assess game coordinates of window coordinates
-  var xx = Math.trunc(e.clientX * gameSize[0] / screenSize[0])
-  var yy = Math.trunc(e.clientY * gameSize[1] / screenSize[1])
-  gameClick(xx, yy)
+  var xx = Math.trunc(e.clientX * gameSize[0] / screenSize[0]);
+  var yy = Math.trunc(e.clientY * gameSize[1] / screenSize[1]);
+  gameClick(xx, yy);
 }
 function gameClick(x, y) {
-  // handle a click within the game
-  // this code draws a line on the canvas
-  gameDraw.beginPath();
-  gameDraw.moveTo(0, 0);
-  gameDraw.lineTo(x, y);
-  gameDraw.stroke();
-  // update to display the change (call here or set flag)
-  screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
-
+  eventContext.gameClick(x, y);
 }
-function handleKey(e){
-  console.log(e.keyCode);
-  if (e.keyCode == 65) {
-    // clear the canvas
-    gameDraw.fillStyle = bgColor
-    gameDraw.fillRect(0,0, 200, 150)
-    gameDraw.fillStyle = defaultColor
-  }
-  else {
-    // draw something
-    gameDraw.beginPath();
-    gameDraw.moveTo(0, 0);
-    gameDraw.lineTo(e.keyCode % 200, 100);
-    gameDraw.stroke();
-  }
-  // this will be moved to a tick function vv
-  screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+
+function handleMousemove(e){
+  // assess game coordinates of window coordinates
+  var xx = Math.trunc(e.clientX * gameSize[0] / screenSize[0]);
+  var yy = Math.trunc(e.clientY * gameSize[1] / screenSize[1]);
+  gameMousemove(xx, yy);
+}
+var MouseoverCoords = [0, 0];
+function gameMousemove(x, y) {
+  eventContext.gameMousemove(x, y);
+}
+function handleKeydown(e){
+  gameKeydown(e.keyCode)
+}
+function gameKeydown(key){
+  eventContext.gameKeydown(key);
 }
 window.addEventListener("click", handleClick)
-window.addEventListener("keydown", handleKey)
-window.addEventListener("load", thing)
+window.addEventListener("mousemove", handleMousemove)
+window.addEventListener("keydown", handleKeydown)
+window.addEventListener("load", initGame)
 </script>
 </body>
