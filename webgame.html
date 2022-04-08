@@ -6,33 +6,36 @@
 
 <script> // function definitions
 function isomorphicContext(){
+  var rootTilePosition = 
+  function gameCoordsToTile (x, y) {
+
+  }
   return {
     gameClick : function (x, y) {
       // handle a click within the game
-      // this code draws a line on the canvas
-      gameDraw.beginPath();
-      gameDraw.moveTo(0, 0);
-      gameDraw.lineTo(x, y);
-      gameDraw.stroke();
+      // check the current tile using x, y
+
       // update to display the change (call here or set flag)
       screenDirty = true;
     },
     gameMousemove : function (x, y) {
       // handle a click within the game
-      // this code draws a line on the canvas
-      gameDraw.strokeStyle = "Red";
-      gameDraw.beginPath();
-      gameDraw.moveTo(MouseoverCoords[0], MouseoverCoords[1]);
-      gameDraw.lineTo(x, y);
-      gameDraw.stroke();
-      gameDraw.strokeStyle = defaultColor;
-      MouseoverCoords = [x, y];
+      // check the current tile using x, y
+
+      // highlight the selected tile
+
       // update to display the change (call here or set flag)
       screenDirty = true;
     },
     gameKeydown : function (key) {
       // key: keycode of event key
-      console.log(key);
+      // console.log(key);
+    },
+    gameLoad : function (key) {
+      // What to do when loading this context
+    },
+    gameDraw : function (key) {
+      // What to do when drawing a dirty screen, every time
     }
   };
 }
@@ -45,18 +48,10 @@ function loadImages(){
     YellowSelect: addImage("images/yellowselect.png", "yellowSelect"),
   };
 }
-
 function initGame(){ // use images in here
   screenDraw.fillStyle = bgColor;
   screenDraw.fillRect(0, 0, screenSize[0], screenSize[1]);
-
-  gameDraw.fillStyle = "#0000FF";
-  gameDraw.fillRect(0, 0, gameSize[0], gameSize[1]);
-  gameDraw.drawImage(Images.GreenTile, 100, 0);
-
-  screenDraw.drawImage(gameCanvas, screenAspectOrigin[0], screenAspectOrigin[1], screenAspectSize[0], screenAspectSize[1]);
-  
-  screenDraw.fillStyle = bgColor;
+  eventContext.gameLoad();
 }
 function addImage(imageLocation, imageName){
   // create and return reference to new image element
@@ -69,43 +64,37 @@ function addImage(imageLocation, imageName){
   document.body.appendChild(ret); // should not display; test if this is necessary; maybe set to game home rather than document
   return ret; // todo: test that this loads correctly
 }
-function handleClick(e){
-  // assess game coordinates of window coordinates
-  var xx = Math.trunc((e.clientX - screenAspectOrigin[0])*screenScale);
-  var yy = Math.trunc((e.clientY - screenAspectOrigin[1])*screenScale);
-  if (xx < 0 || xx > gameSize[0]) return;
-  if (yy < 0 || yy > gameSize[1]) return;
-  gameClick(xx, yy);
-}
-function gameClick(x, y) {
-  eventContext.gameClick(x, y);
-  updateScreen();
-}
-function handleMousemove(e){
-  // assess game coordinates of window coordinates
-  var xx = Math.trunc((e.clientX - screenAspectOrigin[0])*screenScale);
-  var yy = Math.trunc((e.clientY - screenAspectOrigin[1])*screenScale);
-  if (xx < 0 || xx > gameSize[0]) return;
-  if (yy < 0 || yy > gameSize[1]) return;
-  gameMousemove(xx, yy);
-}
-var MouseoverCoords = [0, 0];
-function gameMousemove(x, y) {
-  eventContext.gameMousemove(x, y);
-  updateScreen();
-}
-function handleKeydown(e){
-  gameKeydown(e.keyCode);
-}
-function gameKeydown(key){
-  eventContext.gameKeydown(key);
-  updateScreen();
-}
 function updateScreen() {
   if (screenDirty) {
+    eventContext.gameDraw();
     screenDraw.drawImage(gameCanvas, screenAspectOrigin[0], screenAspectOrigin[1], screenAspectSize[0], screenAspectSize[1]);
     screenDirty = false;
   }
+}
+function handleClick(e){
+  // convert window coordinates to game coordinates
+  var xx = Math.trunc((e.clientX - screenAspectOrigin[0])*screenScale);
+  var yy = Math.trunc((e.clientY - screenAspectOrigin[1])*screenScale);
+  if (xx < 0 || xx > gameSize[0]) return;
+  if (yy < 0 || yy > gameSize[1]) return;
+  // hook event from event context
+  eventContext.gameClick(xx, yy);
+  updateScreen();
+}
+function handleMousemove(e){
+  // convert window coordinates to game coordinates
+  var xx = Math.trunc((e.clientX - screenAspectOrigin[0])*screenScale);
+  var yy = Math.trunc((e.clientY - screenAspectOrigin[1])*screenScale);
+  if (xx < 0 || xx > gameSize[0]) return;
+  if (yy < 0 || yy > gameSize[1]) return;
+  // hook event from event context (maybe merge this with event handler)
+  eventContext.gameMousemove(xx, yy);
+  updateScreen();
+}
+function handleKeydown(e){
+  // hook event from event context (maybe merge this with event handler)
+  eventContext.gameKeydown(e.keyCode);
+  updateScreen();
 }
 </script>
 
