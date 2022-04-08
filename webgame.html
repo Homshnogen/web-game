@@ -1,12 +1,10 @@
-<body style="padding:0;margin:0;" >
+<body style="padding:0;margin:0" >
 
 
-<canvas id="screen"
-width="800" height="800" style="border:0;margin:0;" ></canvas>
-<canvas id="game"
-width="200" height="200" style="display:none;" ></canvas>
+<canvas id="screen" style="border:0;margin:0;" />
+<canvas id="game" style="display:none;" />
 
-<script>
+<script> // function definitions
 function isomorphicContext(){
   return {
     gameClick : function (x, y) {
@@ -17,7 +15,7 @@ function isomorphicContext(){
       gameDraw.lineTo(x, y);
       gameDraw.stroke();
       // update to display the change (call here or set flag)
-      screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1]);
+      screenDirty = true;
     },
     gameMousemove : function (x, y) {
       // handle a click within the game
@@ -30,49 +28,35 @@ function isomorphicContext(){
       gameDraw.strokeStyle = defaultColor;
       MouseoverCoords = [x, y];
       // update to display the change (call here or set flag)
-      screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+      screenDirty = true;
     },
     gameKeydown : function (key) {
+      // key: keycode of event key
       console.log(key);
-      if (key == 65) {
-        // clear the canvas
-        gameDraw.fillStyle = bgColor
-        gameDraw.fillRect(0,0, 200, 150)
-        gameDraw.fillStyle = defaultColor
-      }
-      else {
-        // draw something
-        gameDraw.beginPath();
-        gameDraw.moveTo(0, 0);
-        gameDraw.lineTo(key % 200, 100);
-        gameDraw.stroke();
-      }
-      // this will be moved to a tick function vv
-      screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
     }
   };
 }
 function loadImages(){
   return {
     // make :b:artin
-    Bartin: addImage("mortin.jpg", "mortin")
+    GreenTile: addImage("images/green1.png", "greenTile"),
+    GrayTile: addImage("images/gray1.png", "grayTile"),
+    RedSelect: addImage("images/redselect.png", "redSelect"),
+    YellowSelect: addImage("images/yellowselect.png", "yellowSelect"),
   };
 }
 
 function initGame(){ // use images in here
-  // testing: calibration
-  gameDraw.fillStyle = "#0000FF"
-  gameDraw.fillRect(0, 0, 100, 100)
-  gameDraw.drawImage(Images.Bartin, 100, 0, 100, 100)
+  screenDraw.fillStyle = bgColor;
+  screenDraw.fillRect(0, 0, screenSize[0], screenSize[1]);
+
+  gameDraw.fillStyle = "#0000FF";
+  gameDraw.fillRect(0, 0, gameSize[0], gameSize[1]);
+  gameDraw.drawImage(Images.GreenTile, 100, 0);
+
+  screenDraw.drawImage(gameCanvas, screenAspectOrigin[0], screenAspectOrigin[1], screenAspectSize[0], screenAspectSize[1]);
   
-  screenDraw.fillStyle = "#FF0000"
-  screenDraw.fillRect(0, 0, 1, 1);
-  screenDraw.fillRect(0, screenSize[1]-1, 1, 1);
-  screenDraw.fillRect(screenSize[0]-1, 0, 1, 1);
-  screenDraw.fillRect(screenSize[0]-1, screenSize[1]-1, 1, 1);
-  screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
-  
-  screenDraw.fillStyle = defaultColor
+  screenDraw.fillStyle = bgColor;
 }
 function addImage(imageLocation, imageName){
   // create and return reference to new image element
@@ -87,58 +71,92 @@ function addImage(imageLocation, imageName){
 }
 function handleClick(e){
   // assess game coordinates of window coordinates
-  var xx = Math.trunc(e.clientX * gameSize[0] / screenSize[0]);
-  var yy = Math.trunc(e.clientY * gameSize[1] / screenSize[1]);
+  var xx = Math.trunc((e.clientX - screenAspectOrigin[0])*screenScale);
+  var yy = Math.trunc((e.clientY - screenAspectOrigin[1])*screenScale);
+  if (xx < 0 || xx > gameSize[0]) return;
+  if (yy < 0 || yy > gameSize[1]) return;
   gameClick(xx, yy);
 }
 function gameClick(x, y) {
   eventContext.gameClick(x, y);
+  updateScreen();
 }
-
 function handleMousemove(e){
   // assess game coordinates of window coordinates
-  var xx = Math.trunc(e.clientX * gameSize[0] / screenSize[0]);
-  var yy = Math.trunc(e.clientY * gameSize[1] / screenSize[1]);
+  var xx = Math.trunc((e.clientX - screenAspectOrigin[0])*screenScale);
+  var yy = Math.trunc((e.clientY - screenAspectOrigin[1])*screenScale);
+  if (xx < 0 || xx > gameSize[0]) return;
+  if (yy < 0 || yy > gameSize[1]) return;
   gameMousemove(xx, yy);
 }
 var MouseoverCoords = [0, 0];
 function gameMousemove(x, y) {
   eventContext.gameMousemove(x, y);
+  updateScreen();
 }
 function handleKeydown(e){
-  gameKeydown(e.keyCode)
+  gameKeydown(e.keyCode);
 }
 function gameKeydown(key){
   eventContext.gameKeydown(key);
+  updateScreen();
+}
+function updateScreen() {
+  if (screenDirty) {
+    screenDraw.drawImage(gameCanvas, screenAspectOrigin[0], screenAspectOrigin[1], screenAspectSize[0], screenAspectSize[1]);
+    screenDirty = false;
+  }
 }
 </script>
-<script>
+
+<script> // globals and entry points
 //var screen = document.getElementById("screen")
-var defaultColor = "#000000"
-var bgColor = "#FFFFFF"
+var defaultColor = "#000000";
+var bgColor = "#aaaaaa";
 
 // initialize window
-var gameCanvas = document.getElementById("game")
-var gameSize = [200, 200]
-gameCanvas.width = gameSize[0]
-gameCanvas.height = gameSize[1]
-var gameDraw = gameCanvas.getContext("2d")
-gameDraw.imageSmoothingEnabled = false
+var gameCanvas = document.getElementById("game");
+var gameSize = [480, 240];
+gameCanvas.width = gameSize[0];
+gameCanvas.height = gameSize[1];
+var gameDraw = gameCanvas.getContext("2d");
+gameDraw.imageSmoothingEnabled = false;
+
 // resize main canvas to iframe/window size
-var screenCanvas = document.getElementById("screen")
-var screenSize = [window.innerWidth, window.innerHeight]
-screenCanvas.width = screenSize[0]
-screenCanvas.height = screenSize[1]
+var screenCanvas = document.getElementById("screen");
+var screenSize = [window.innerWidth, window.innerHeight];
+screenCanvas.width = screenSize[0];
+screenCanvas.height = screenSize[1];
+
+// calculate aspect ratio and origin to draw game canvas onto main canvas
+var aspectRatio = gameSize[0]/gameSize[1];
+var screenAspectOrigin = [0, 0];
+var screenAspectSize = [screenSize[0], screenSize[1]];
+var screenScale;
+if (aspectRatio > (screenSize[0]/screenSize[1])) {
+  screenAspectSize[1] = screenSize[0]/aspectRatio;
+  screenAspectOrigin[1] = (screenSize[1]-screenAspectSize[1])/2;
+  screenScale = gameSize[0]/screenAspectSize[0];
+} else {
+  screenAspectSize[0] = screenSize[1]*aspectRatio;
+  screenAspectOrigin[0] = (screenSize[0]-screenAspectSize[0])/2;
+  screenScale = gameSize[1]/screenAspectSize[1];
+}
+
 // get main context; drawn from game canvas
-var screenDraw = screenCanvas.getContext("2d")
-screenDraw.imageSmoothingEnabled = false
+var screenDraw = screenCanvas.getContext("2d");
+screenDraw.imageSmoothingEnabled = false;
+var screenDirty = false;
 
 eventContext = isomorphicContext();
 Images = loadImages();
+tileSize = [47, 35];
 
-window.addEventListener("click", handleClick)
-window.addEventListener("mousemove", handleMousemove)
-window.addEventListener("keydown", handleKeydown)
-window.addEventListener("load", initGame)
+// add event listeners with hooks for game object
+window.addEventListener("click", handleClick);
+window.addEventListener("mousemove", handleMousemove);
+window.addEventListener("keydown", handleKeydown);
+// add load listener to wait for code-generated elements and assets, i.e. loadImages()
+window.addEventListener("load", initGame);
 </script>
 </body>
