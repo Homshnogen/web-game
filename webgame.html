@@ -5,82 +5,65 @@
 width="800" height="800" style="border:0;margin:0;" ></canvas>
 <canvas id="game"
 width="200" height="200" style="display:none;" ></canvas>
-<img src="mortin.jpg" id="bug" style="display:none;"></img>
-
 
 <script>
-//var screen = document.getElementById("screen")
-var defaultColor = "#000000"
-var bgColor = "#FFFFFF"
-
-// initialize window
-var gameCanvas = document.getElementById("game")
-var gameSize = [200, 200]
-gameCanvas.width = gameSize[0]
-gameCanvas.height = gameSize[1]
-var gameDraw = gameCanvas.getContext("2d")
-gameDraw.imageSmoothingEnabled = false
-// resize main canvas to iframe/window size
-var screenCanvas = document.getElementById("screen")
-var screenSize = [window.innerWidth, window.innerHeight]
-screenCanvas.width = screenSize[0]
-screenCanvas.height = screenSize[1]
-// get main context; drawn from game canvas
-var screenDraw = screenCanvas.getContext("2d")
-screenDraw.imageSmoothingEnabled = false
-
-eventContext = {
-  gameClick : function (x, y) {
-    // handle a click within the game
-    // this code draws a line on the canvas
-    gameDraw.beginPath();
-    gameDraw.moveTo(0, 0);
-    gameDraw.lineTo(x, y);
-    gameDraw.stroke();
-    // update to display the change (call here or set flag)
-    screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1]);
-  },
-  gameMousemove : function (x, y) {
-    // handle a click within the game
-    // this code draws a line on the canvas
-    gameDraw.strokeStyle = "Red";
-    gameDraw.beginPath();
-    gameDraw.moveTo(MouseoverCoords[0], MouseoverCoords[1]);
-    gameDraw.lineTo(x, y);
-    gameDraw.stroke();
-    gameDraw.strokeStyle = defaultColor;
-    MouseoverCoords = [x, y];
-    // update to display the change (call here or set flag)
-    screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
-  },
-  gameKeydown : function (key) {
-    console.log(key);
-    if (key == 65) {
-      // clear the canvas
-      gameDraw.fillStyle = bgColor
-      gameDraw.fillRect(0,0, 200, 150)
-      gameDraw.fillStyle = defaultColor
-    }
-    else {
-      // draw something
+function isomorphicContext(){
+  return {
+    gameClick : function (x, y) {
+      // handle a click within the game
+      // this code draws a line on the canvas
       gameDraw.beginPath();
       gameDraw.moveTo(0, 0);
-      gameDraw.lineTo(e.keyCode % 200, 100);
+      gameDraw.lineTo(x, y);
       gameDraw.stroke();
+      // update to display the change (call here or set flag)
+      screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1]);
+    },
+    gameMousemove : function (x, y) {
+      // handle a click within the game
+      // this code draws a line on the canvas
+      gameDraw.strokeStyle = "Red";
+      gameDraw.beginPath();
+      gameDraw.moveTo(MouseoverCoords[0], MouseoverCoords[1]);
+      gameDraw.lineTo(x, y);
+      gameDraw.stroke();
+      gameDraw.strokeStyle = defaultColor;
+      MouseoverCoords = [x, y];
+      // update to display the change (call here or set flag)
+      screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
+    },
+    gameKeydown : function (key) {
+      console.log(key);
+      if (key == 65) {
+        // clear the canvas
+        gameDraw.fillStyle = bgColor
+        gameDraw.fillRect(0,0, 200, 150)
+        gameDraw.fillStyle = defaultColor
+      }
+      else {
+        // draw something
+        gameDraw.beginPath();
+        gameDraw.moveTo(0, 0);
+        gameDraw.lineTo(key % 200, 100);
+        gameDraw.stroke();
+      }
+      // this will be moved to a tick function vv
+      screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
     }
-    // this will be moved to a tick function vv
-    screenDraw.drawImage(gameCanvas, 0, 0, screenSize[0], screenSize[1])
-  }, 
-  
-};
+  };
+}
+function loadImages(){
+  return {
+    // make :b:artin
+    Bartin: addImage("mortin.jpg", "mortin")
+  };
+}
 
 function initGame(){ // use images in here
-  // make :b:artin
-  var Bartin = document.getElementById("bug")
   // testing: calibration
   gameDraw.fillStyle = "#0000FF"
   gameDraw.fillRect(0, 0, 100, 100)
-  gameDraw.drawImage(Bartin, 100, 0, 100, 100)
+  gameDraw.drawImage(Images.Bartin, 100, 0, 100, 100)
   
   screenDraw.fillStyle = "#FF0000"
   screenDraw.fillRect(0, 0, 1, 1);
@@ -128,6 +111,31 @@ function handleKeydown(e){
 function gameKeydown(key){
   eventContext.gameKeydown(key);
 }
+</script>
+<script>
+//var screen = document.getElementById("screen")
+var defaultColor = "#000000"
+var bgColor = "#FFFFFF"
+
+// initialize window
+var gameCanvas = document.getElementById("game")
+var gameSize = [200, 200]
+gameCanvas.width = gameSize[0]
+gameCanvas.height = gameSize[1]
+var gameDraw = gameCanvas.getContext("2d")
+gameDraw.imageSmoothingEnabled = false
+// resize main canvas to iframe/window size
+var screenCanvas = document.getElementById("screen")
+var screenSize = [window.innerWidth, window.innerHeight]
+screenCanvas.width = screenSize[0]
+screenCanvas.height = screenSize[1]
+// get main context; drawn from game canvas
+var screenDraw = screenCanvas.getContext("2d")
+screenDraw.imageSmoothingEnabled = false
+
+eventContext = isomorphicContext();
+Images = loadImages();
+
 window.addEventListener("click", handleClick)
 window.addEventListener("mousemove", handleMousemove)
 window.addEventListener("keydown", handleKeydown)
