@@ -6,14 +6,48 @@
 
 <script> // function definitions
 function isomorphicContext(){
-  var rootTilePosition = 
+  var rootTilePosition = [235, 230];
+  //var rootTileGrid = [258, 252];
+  var mouseoverTile = [2, 3];
+  var selectedTile = [4, 8];
+  var Tiles = [
+    ["GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GrayTile" , "GreenTile"],
+    ["GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile", "GreenTile"],
+  ];
   function gameCoordsToTile (x, y) {
-
+    //return [Math.floor(Math.random()*10), Math.floor(Math.random()*10)];
+    // magic numbers:
+    // 8634 = rootTileGrid[0]*11 + rootTileGrid[1]*23
+    // 3204 = - rootTileGrid[0]*12 + rootTileGrid[1]*25
+    // 551 = 25*11 + 23*12;
+    let xx = (3204 - 25*y + 12*x)/551;
+    let yy = (8634 - 23*y - 11*x)/551;
+    // detect the lower edges of tiles on edge of grid
+    if (xx < 0 && xx > -0.5) {
+      xx = 0;
+      yy = (258 - x)/25;
+    }
+    if (yy < 0 && yy > -0.5) {
+      yy = 0
+      xx = (x - 258)/23;
+    }
+    return [Math.floor(xx), Math.floor(yy)];
   }
   return {
     gameClick : function (x, y) {
       // handle a click within the game
       // check the current tile using x, y
+      selectedTile = gameCoordsToTile (x, y);
+
+      // mark selected tile with red border (done in draw)
 
       // update to display the change (call here or set flag)
       screenDirty = true;
@@ -21,8 +55,9 @@ function isomorphicContext(){
     gameMousemove : function (x, y) {
       // handle a click within the game
       // check the current tile using x, y
+      mouseoverTile = gameCoordsToTile (x, y);
 
-      // highlight the selected tile
+      // highlight the selected tile (done in draw)
 
       // update to display the change (call here or set flag)
       screenDirty = true;
@@ -31,11 +66,26 @@ function isomorphicContext(){
       // key: keycode of event key
       // console.log(key);
     },
-    gameLoad : function (key) {
+    gameLoad : function () {
       // What to do when loading this context
+      screenDirty = true;
     },
-    gameDraw : function (key) {
+    gameDraw : function () {
       // What to do when drawing a dirty screen, every time
+      gameDraw.fillStyle = "#0000FF";
+      gameDraw.fillRect(0, 0, gameSize[0], gameSize[1]);
+      for (let i = 9; i >= 0; i--) {
+        for (let j = 9; j >= 0; j--) {
+          gameDraw.drawImage(Images[Tiles[i][j]], rootTilePosition[0]+i*23-j*25, rootTilePosition[1]-i*11-j*12);
+          if (selectedTile && selectedTile[0]==i && selectedTile[1] == j) {
+            gameDraw.drawImage(Images.RedSelect, rootTilePosition[0]+i*23-j*25, rootTilePosition[1]-i*11-j*12);
+            gameDraw.drawImage(Images.YellowSelect, rootTilePosition[0]+i*23-j*25, rootTilePosition[1]-i*11-j*12);
+          }
+          else if (mouseoverTile && mouseoverTile[0]==i && mouseoverTile[1] == j) {
+            gameDraw.drawImage(Images.YellowSelect, rootTilePosition[0]+i*23-j*25, rootTilePosition[1]-i*11-j*12);
+          }
+        }
+      }
     }
   };
 }
@@ -52,6 +102,7 @@ function initGame(){ // use images in here
   screenDraw.fillStyle = bgColor;
   screenDraw.fillRect(0, 0, screenSize[0], screenSize[1]);
   eventContext.gameLoad();
+  updateScreen();
 }
 function addImage(imageLocation, imageName){
   // create and return reference to new image element
@@ -105,7 +156,7 @@ var bgColor = "#aaaaaa";
 
 // initialize window
 var gameCanvas = document.getElementById("game");
-var gameSize = [480, 240];
+var gameSize = [500, 300];
 gameCanvas.width = gameSize[0];
 gameCanvas.height = gameSize[1];
 var gameDraw = gameCanvas.getContext("2d");
@@ -139,7 +190,7 @@ var screenDirty = false;
 
 eventContext = isomorphicContext();
 Images = loadImages();
-tileSize = [47, 35];
+//tileSize = [47, 35];
 
 // add event listeners with hooks for game object
 window.addEventListener("click", handleClick);
